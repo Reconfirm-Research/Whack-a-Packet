@@ -3,8 +3,8 @@
 
 #include <linux/if_xdp.h>
 #include <linux/if_link.h>
-#include <bpf/libbpf.h>
-#include <bpf/xsk.h>
+#include <xdp/libxdp.h>
+#include <xdp/xsk.h>
 #include <net/if.h>
 #include <stdint.h>
 #include <stdbool.h>

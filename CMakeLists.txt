@@ -16,40 +16,6 @@ add_definitions(-D_GNU_SOURCE)
 # Find required packages
 find_package(PkgConfig REQUIRED)
 
-# Function to find BPF library and headers
-function(find_bpf)
-    find_path(LIBBPF_INCLUDE_DIR
-        NAMES
-            bpf/bpf.h
-            bpf/btf.h
-            bpf/libbpf.h
-        PATHS
-            /usr/include
-            /usr/local/include
-            /opt/local/include
-            ENV CPATH)
-
-    find_library(LIBBPF_LIBRARIES
-        NAMES
-            bpf
-        PATHS
-            /usr/lib
-            /usr/local/lib
-            /opt/local/lib
-            ENV LIBRARY_PATH
-            ENV LD_LIBRARY_PATH)
-
-    if(NOT LIBBPF_INCLUDE_DIR OR NOT LIBBPF_LIBRARIES)
-        message(FATAL_ERROR "libbpf not found. Please install libbpf-dev")
-    endif()
-
-    set(LIBBPF_INCLUDE_DIR ${LIBBPF_INCLUDE_DIR} PARENT_SCOPE)
-    set(LIBBPF_LIBRARIES ${LIBBPF_LIBRARIES} PARENT_SCOPE)
-endfunction()
-
-# Find BPF
-find_bpf()
-
 # Find XDP
 pkg_check_modules(LIBXDP REQUIRED libxdp)
 if(NOT LIBXDP_FOUND)
@@ -69,11 +35,17 @@ find_path(KERNEL_HEADERS
     REQUIRED
 )
 
+find_path(XDP_HEADERS
+    NAMES xdp/xsk.h xdp/libxdp.h
+    PATHS /usr/include /usr/local/include ${LIBXDP_INCLUDE_DIRS}
+    REQUIRED
+)
+
 # Include directories
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${KERNEL_HEADERS}
-    ${LIBBPF_INCLUDE_DIR}
+    ${XDP_HEADERS}
     ${LIBXDP_INCLUDE_DIRS}
     ${NUMA_INCLUDE_DIRS}
 )
@@ -97,7 +69,6 @@ link_directories(
 
 # Link libraries
 target_link_libraries(whack
-    ${LIBBPF_LIBRARIES}
     ${LIBXDP_LIBRARIES}
     ${NUMA_LIBRARIES}
     pthread
@@ -129,8 +100,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 message(STATUS "Configuration Summary")
 message(STATUS "-------------------")
 message(STATUS "Kernel Headers: ${KERNEL_HEADERS}")
-message(STATUS "libbpf Include: ${LIBBPF_INCLUDE_DIR}")
-message(STATUS "libbpf Libraries: ${LIBBPF_LIBRARIES}")
+message(STATUS "XDP Headers: ${XDP_HEADERS}")
 message(STATUS "libxdp Include: ${LIBXDP_INCLUDE_DIRS}")
 message(STATUS "libnuma Include: ${NUMA_INCLUDE_DIRS}")
 message(STATUS "Compiler: ${CMAKE_C_COMPILER_ID}")
@@ -138,6 +108,6 @@ message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C Flags: ${CMAKE_C_FLAGS}")
 
 # Verify all required components are found
-if(NOT LIBBPF_LIBRARIES OR NOT LIBXDP_FOUND OR NOT NUMA_FOUND OR NOT KERNEL_HEADERS)
+if(NOT LIBXDP_FOUND OR NOT NUMA_FOUND OR NOT KERNEL_HEADERS OR NOT XDP_HEADERS)
     message(FATAL_ERROR "Missing required dependencies. Please check the error messages above.")
 endif()

@@ -28,7 +28,6 @@ install_dependencies() {
         build-essential \
         cmake \
         pkg-config \
-        libbpf-dev \
         libxdp-dev \
         xdp-tools \
         linux-headers-$(uname -r) \
@@ -41,15 +40,15 @@ install_dependencies() {
     # Create symlinks for XDP headers if they don't exist
     mkdir -p /usr/include/xdp
     if [ ! -f "/usr/include/xdp/xsk.h" ]; then
-        ln -sf /usr/include/bpf/xsk.h /usr/include/xdp/xsk.h
+        ln -sf /usr/include/linux/xdp.h /usr/include/xdp/xsk.h
     fi
     if [ ! -f "/usr/include/xdp/libxdp.h" ]; then
-        ln -sf /usr/include/bpf/libbpf.h /usr/include/xdp/libxdp.h
+        ln -sf /usr/include/linux/if_xdp.h /usr/include/xdp/libxdp.h
     fi
 
-    # Verify BPF headers are properly installed
-    if [ ! -f "/usr/include/bpf/libbpf.h" ] || [ ! -f "/usr/include/linux/if_xdp.h" ]; then
-        echo -e "${RED}Error: BPF headers not found after installation${NC}"
+    # Verify XDP headers are properly installed
+    if [ ! -f "/usr/include/linux/if_xdp.h" ] || [ ! -f "/usr/include/xdp/xsk.h" ]; then
+        echo -e "${RED}Error: XDP headers not found after installation${NC}"
         exit 1
     fi
 }
@@ -66,7 +65,6 @@ fi
 # Check for required headers
 echo "Checking dependencies..."
 if [ ! -f "/usr/include/linux/if_xdp.h" ] || \
-   [ ! -f "/usr/include/bpf/libbpf.h" ] || \
    [ ! -f "/usr/include/xdp/xsk.h" ] || \
    [ ! -f "/usr/include/numa.h" ]; then
     echo -e "${YELLOW}Missing required headers. Installing dependencies...${NC}"
@@ -116,7 +114,6 @@ echo "CMake: $(cmake --version | head -n1)"
 # Print dependency information
 echo -e "\nDependency Information:"
 echo "----------------------"
-echo "libbpf: $(dpkg -l | grep libbpf-dev || echo 'Not found')"
 echo "libxdp: $(dpkg -l | grep libxdp-dev || echo 'Not found')"
 echo "libnuma: $(dpkg -l | grep libnuma-dev || echo 'Not found')"
 echo "kernel headers: $(dpkg -l | grep linux-headers-$(uname -r) || echo 'Not found')"
@@ -126,7 +123,6 @@ echo -e "\nHeader Files:"
 echo "------------"
 for header in \
     "/usr/include/linux/if_xdp.h" \
-    "/usr/include/bpf/libbpf.h" \
     "/usr/include/xdp/xsk.h" \
     "/usr/include/xdp/libxdp.h" \
     "/usr/include/numa.h"; do
