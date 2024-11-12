@@ -1,6 +1,7 @@
 # whack
 
 Attention, this works only on certain NICs. This is not universal.
+
 A high-performance DNS packet analyzer using AF_XDP (XDP Socket Interface) for ultra-fast packet processing. This implementation achieves superior performance by leveraging kernel bypass and zero-copy packet processing.
 
 ## Performance Features
